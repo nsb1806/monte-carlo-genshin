@@ -24,7 +24,6 @@ FIFTY_FIFTY_CHANCE = 0.50;
 
 
 % ------------------ 1: GLOBAL CONFIGURATION -----------------
-% Assigned to: Oblan
 
 % Simulation Parameters
 numSimulations = 20000;
@@ -49,14 +48,11 @@ fprintf('---------------------------------------------------\n');
 fprintf('---------------------------------------------------\n');
 
 % ------------------ 2: MONTE CARLO LOOP -----------------
-% Assigned to: Butaslac
 
 % implement scenario loops using the function: simulatePlayerPullSession()
 
 
 % ------------------ 3: STATISTICAL METRICS  -----------------
-% Assigned to: Cueto
-
 % Compute Statistical Metrics
 % variables: averagePulls, averageSpent
 
@@ -73,15 +69,47 @@ fprintf('---------------------------------------------------\n');
 fprintf('---------------------------------------------------\n');
 
 % ------------------ 4: VISUALIZATION & CDF PLOT -----------------
-% Assigned to: Munsayac
 
 % Cumulative Distribution Function (CDF) Plot w/ annotation
 
 
 % ------------------ 5: PULL SESSION FUNCTION -----------------
-% Assigned to: Butaslac
 
-function [totalPulls, totalSpent] = simulatePlayerPullSession (startingPity, startingBudget)
-% Function to simulate single player session
-% Tracking variables: pullsCount, pity, moneySpent, charAcquired,
-% charGuaranteed, totalPulls, totalSpent
+function [totalPulls, totalSpent] = simulatePlayerPullSession(startingPity, startingBudget)
+    pullsCount = 0;             % pulls done in this session
+    pity = startingPity;        % pity counter
+    moneySpent = 0;             
+    charAcquired = false;       % featured 5 star character obtained?
+    charGuaranteed = false;     % lost 50/50?
+
+    % increment the counters per pull
+    while ~charAcquired && pullsCount < MAX_PULLS && ...
+            moneySpent + COST_PER_PULL <= startingBudget
+        pullsCount = pullsCount + 1;
+        pity = pity + 1;
+        moneySpent = moneySpent + COST_PER_PULL;
+        
+        % calculate 5 star probability for one pull
+        if pity <= SOFT_PITY_START
+            currentProbability = BASE_PULL_PROB;
+        elseif pity > SOFT_PITY_START && pity < HARD_PITY_LIMIT
+            currentProbability = BASE_PULL_PROB + SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START);
+        else
+            currentProbability = 1.0;       % hard pity guarantee
+        end
+
+        %rolling for 5-star
+        if rand() < currentProbability
+            pity = 0;         % resets if 5 star acquired
+            if charGuaranteed || rand() < FIFTY_FIFTY_CHANCE
+                charAcquired = true;      % featured 5-star character obtained
+            else
+                charGuaranteed = true;    % lost 50/50; next 5 star is guaranteed
+            end
+        end
+    end
+
+    % return values
+    totalPulls = pullsCount;
+    totalSpent = moneySpent;
+end
