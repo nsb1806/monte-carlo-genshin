@@ -49,8 +49,13 @@ fprintf('---------------------------------------------------\n');
 
 % ------------------ 2: MONTE CARLO LOOP -----------------
 
-% implement scenario loops using the function: simulatePlayerPullSession()
+pullsResults = zeros(1, numSimulations);
+spentResults = zeros(1, numSimulations);
 
+for indexSim = 1:numSimulations 
+    [pullsResults(indexSim), spentResults(indexSim)] = ...
+        simulatePlayerPullSession(startingPity, startingBudget);
+end
 
 % ------------------ 3: STATISTICAL METRICS  -----------------
 % Compute Statistical Metrics
@@ -93,7 +98,7 @@ function [totalPulls, totalSpent] = simulatePlayerPullSession(startingPity, star
         if pity <= SOFT_PITY_START
             currentProbability = BASE_PULL_PROB;
         elseif pity > SOFT_PITY_START && pity < HARD_PITY_LIMIT
-            currentProbability = BASE_PULL_PROB + SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START);
+            currentProbability = min(1, BASE_PULL_PROB + SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START));
         else
             currentProbability = 1.0;       % hard pity guarantee
         end
