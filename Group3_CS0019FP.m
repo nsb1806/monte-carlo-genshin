@@ -22,21 +22,19 @@ GUARANTEED_PULLS = 180;
 MAX_PULLS = 180;
 FIFTY_FIFTY_CHANCE = 0.50;
 
-
 % ------------------ 1: GLOBAL CONFIGURATION -----------------
 
 % Simulation Parameters
 numSimulations = 20000;
 
 % Initialize User Inputs: (Default is 0)
-startingPity = 0;
-startingBudget = 0;
-startingPrimogems = 0;
 % startingPity | startingBudget | startingPrimogems
 fprintf('===================================================\n');
 fprintf('        Banner Configuration & Player State        \n');
 fprintf('===================================================\n');
-
+startingPity = input('Starting Pity: ');
+startingPrimogems = input('Primogems: ');
+startingBudget = input('Budget: ');
 
 % Simulation results / SCENARIO 
 fprintf('===================================================\n');
@@ -64,7 +62,7 @@ fprintf('       the next 5* character is guaranteed to be the promotional charac
 fprintf('Each wish of the same type shares the same pity counters and guarantees,\n');
 fprintf('meaning that the pity counter for the current limited character banner\n');
 fprintf('are carried over to the next limited character banner.\n\n');
-fprintf('')
+fprintf('1 Wish = 160 Primogems; 10 Wishes = 1600 Primogems\n\n')
 
 % Display player state (starting pity, primogems, and budget)
 fprintf('---------------------------------------------------\n');
