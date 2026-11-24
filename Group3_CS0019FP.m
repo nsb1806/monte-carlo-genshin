@@ -29,6 +29,9 @@ FIFTY_FIFTY_CHANCE = 0.50;
 numSimulations = 20000;
 
 % Initialize User Inputs: (Default is 0)
+startingPity = 0;
+startingBudget = 0;
+startingPrimogems = 0;
 % startingPity | startingBudget | startingPrimogems
 fprintf('===================================================\n');
 fprintf('        Banner Configuration & Player State        \n');
@@ -43,9 +46,31 @@ fprintf('                  in Genshin Impact                \n');
 fprintf('===================================================\n');
 fprintf('Number of simulated sessions: %d\n', numSimulations)
 % Display Banner rules
-fprintf('---------------------------------------------------\n');
+fprintf('===================================================\n');
+fprintf('             CHARACTER BANNER RULES (5*)           \n');
+fprintf('===================================================\n');
+fprintf('5* Pity System:\n');
+fprintf('If a player does not obtain any 5* character after 89\n');
+fprintf('wishes, the 90th wish is guaranteed to be a 5* character.\n');
+fprintf('   - This counter will reset if the player obtains any 5* character\n\n');
+fprintf('When a player has not obtained any 5* on their 74th wish, a hidden mechanic\n');
+fprintf('called ''Soft Pity'' increases the player''s chances of obtaining a 5* by\n');
+fprintf('6%% for each pull starting from the 75th wish until the player obtains.\n');
+fprintf('a 5* character.\n\n');
+fprintf('Every time a player obtains a 5* character, there is a 50%%\n');
+fprintf('chance it will be the promotional 5* character.\n');
+fprintf('   - If the 5* character obtained is not the promotional character,\n')
+fprintf('       the next 5* character is guaranteed to be the promotional character.\n\n');
+fprintf('Each wish of the same type shares the same pity counters and guarantees,\n');
+fprintf('meaning that the pity counter for the current limited character banner\n');
+fprintf('are carried over to the next limited character banner.\n\n');
+fprintf('')
+
 % Display player state (starting pity, primogems, and budget)
 fprintf('---------------------------------------------------\n');
+fprintf('Starting Pity: %d\n', startingPity);
+fprintf('Primogems: %d\n', startingPrimogems);
+fprintf('Budget: %d\n', startingBudget);
 
 % ------------------ 2: MONTE CARLO LOOP -----------------
 
