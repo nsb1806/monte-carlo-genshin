@@ -6,6 +6,11 @@ clear;
 
 %----- RULES % CONSTANT VARIABLES FOR GENSHIN PITY SYSTEM ------
 
+% Declare global constants before assigning values 
+global PRIMOGEMS_PER_PULL PHP_PER_CRYSTAL COST_PER_PULL ... 
+    BASE_PULL_PROB SOFT_PITY_START HARD_PITY_LIMIT SOFT_PITY_INCREMENT ... 
+    MAX_PULLS FIFTY_FIFTY_CHANCE;
+
 % Currency
 PRIMOGEMS_PER_PULL = 160;
 PHP_PER_CRYSTAL = 0.85;
@@ -27,15 +32,17 @@ FIFTY_FIFTY_CHANCE = 0.50;
 % Simulation Parameters
 numSimulations = 20000;
 
-
-% Initialize User Inputs: (Default is 0)
-% startingPity | startingBudget | startingPrimogems
 fprintf('===================================================\n');
 fprintf('        Banner Configuration & Player State        \n');
 fprintf('===================================================\n');
 startingPity = input('Starting Pity: ');
+if isempty(startingPity), startingPity = 0; end
 startingPrimogems = input('Primogems: ');
+if isempty(startingPrimogems), startingPrimogems = 0; end
 startingBudget = input('Budget: ');
+if isempty(startingBudget), startingBudget = 0; end
+
+freePulls = floor(startingPrimogems / PRIMOGEMS_PER_PULL)
 
 % Simulation results / SCENARIO 
 fprintf('===================================================\n');
@@ -75,10 +82,12 @@ fprintf('Budget: %d\n', startingBudget);
 
 pullsResults = zeros(1, numSimulations);
 spentResults = zeros(1, numSimulations);
+successResults = false(1, numSimulations);
 
 for indexSim = 1:numSimulations 
-    [pullsResults(indexSim), spentResults(indexSim)] = ...
-        simulatePlayerPullSession(startingPity, startingBudget);
+    [pullsResults(indexSim), spentResults(indexSim), successResults(indexSim)] = ...
+        simulatePlayerPullSession(startingPity, startingBudget, ...
+        freePulls);
 end
 
 % ------------------ 3: STATISTICAL METRICS  -----------------
@@ -90,6 +99,7 @@ end
 
 averagePulls = mean(pullsResults);
 averageSpent = mean(spentResults);
+successRate = mean(successResults);
 
 % Target Cumulative Percentiles (probability thresholds)
 percentiles = [50, 80, 90, 99];
@@ -102,7 +112,8 @@ fprintf('                 STATISTICAL RESULTS               \n');
 fprintf('===================================================\n');
 % Display average pulls and average money spent
 fprintf('---------------------------------------------------\n');
-fprintf('Average Money Spent: %.2f PHP\n', averageSpent);
+fprintf('Average Pulls         : %.2f\n', averagePulls);
+fprintf('Average Money Spent  : %.2f PHP\n', averageSpent);
 fprintf('Session Success Rate : %.2f%%\n', successRate * 100);
 % Display cumulative probability thresholds
 fprintf('---------------------------------------------------\n');
@@ -117,25 +128,41 @@ end
 
 % ------------------ 5: PULL SESSION FUNCTION -----------------
 
-function [totalPulls, totalSpent] = simulatePlayerPullSession(startingPity, startingBudget)
+function [totalPulls, totalSpent, charAcquired] = ...
+    simulatePlayerPullSession(startingPity, startingBudget, freePulls)
+
+    global PRIMOGEMS_PER_PULL PHP_PER_CRYSTAL COST_PER_PULL ... 
+        BASE_PULL_PROB SOFT_PITY_START HARD_PITY_LIMIT SOFT_PITY_INCREMENT ... 
+        MAX_PULLS FIFTY_FIFTY_CHANCE;
+
     pullsCount = 0;             % pulls done in this session
     pity = startingPity;        % pity counter
     moneySpent = 0;             
+    freePullsRemaining = freePulls;
     charAcquired = false;       % featured 5 star character obtained?
     charGuaranteed = false;     % lost 50/50?
 
     % increment the counters per pull
-    while ~charAcquired && pullsCount < MAX_PULLS && ...
-            moneySpent + COST_PER_PULL <= startingBudget
+    while ~charAcquired && pullsCount < MAX_PULLS 
+        if freePullsRemaining > 0
+            freePullsRemaining = freePullsRemaining - 1;
+            pullCost = 0;
+        else
+            pullCost = COST_PER_PULL;
+            if startingBudget > 0 && (moneySpent + pullCost) > startingBudget
+                break;
+            end
+        end
+
         pullsCount = pullsCount + 1;
         pity = pity + 1;
-        moneySpent = moneySpent + COST_PER_PULL;
+        moneySpent = moneySpent + pullCost;
         
         % calculate 5 star probability for one pull
         if pity < SOFT_PITY_START
             currentProbability = BASE_PULL_PROB;
         elseif pity >= SOFT_PITY_START && pity < HARD_PITY_LIMIT
-            currentProbability = BASE_PULL_PROB + SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START);
+            currentProbability = min(1.0, BASE_PULL_PROB + SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START));
         else
             currentProbability = 1.0;       % hard pity guarantee
         end
