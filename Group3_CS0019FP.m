@@ -49,8 +49,13 @@ fprintf('---------------------------------------------------\n');
 
 % ------------------ 2: MONTE CARLO LOOP -----------------
 
-% implement scenario loops using the function: simulatePlayerPullSession()
+pullsResults = zeros(1, numSimulations);
+spentResults = zeros(1, numSimulations);
 
+for indexSim = 1:numSimulations 
+    [pullsResults(indexSim), spentResults(indexSim)] = ...
+        simulatePlayerPullSession(startingPity, startingBudget);
+end
 
 % ------------------ 3: STATISTICAL METRICS  -----------------
 % Compute Statistical Metrics
