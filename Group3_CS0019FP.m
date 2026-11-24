@@ -28,6 +28,7 @@ FIFTY_FIFTY_CHANCE = 0.50;
 % Simulation Parameters
 numSimulations = 20000;
 
+
 % Initialize User Inputs: (Default is 0)
 % startingPity | startingBudget | startingPrimogems
 fprintf('===================================================\n');
@@ -64,15 +65,28 @@ end
 % Target Cumulative Percentiles (probability thresholds)
 % 50%, 80%, 90%, 99% success threshold
 
+averagePulls = mean(pullsResults);
+averageSpent = mean(spentResults);
+
+% Target Cumulative Percentiles (probability thresholds)
+percentiles = [50, 80, 90, 99];
+pullThresholds = prctile(pullsResults, percentiles);
+spentThresholds = prctile(spentResults, percentiles);
+
 % Display Statistical Results
 fprintf('===================================================\n');
 fprintf('                 STATISTICAL RESULTS               \n');
 fprintf('===================================================\n');
 % Display average pulls and average money spent
 fprintf('---------------------------------------------------\n');
+fprintf('Average Money Spent: %.2f PHP\n', averageSpent);
+fprintf('Session Success Rate : %.2f%%\n', successRate * 100);
 % Display cumulative probability thresholds
 fprintf('---------------------------------------------------\n');
-
+for i = 1:length(percentiles)
+    fprintf('%.0f%% Success Threshold - Pulls: %d, Money Spent: %.2f PHP\n', ...
+        percentiles(i), pullThresholds(i), spentThresholds(i));
+end
 % ------------------ 4: VISUALIZATION & CDF PLOT -----------------
 
 % Cumulative Distribution Function (CDF) Plot w/ annotation
