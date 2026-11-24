@@ -1,12 +1,11 @@
 % CS0019: Final Project
-% CODE BLUEPRINT & TASKS
+% Monte-Carlo Simulation of the Genshin Impact Pity System
 
 clc;
 clear;
 
 %----- RULES % CONSTANT VARIABLES FOR GENSHIN PITY SYSTEM ------
 
-% Declare global constants before assigning values 
 global PRIMOGEMS_PER_PULL PHP_PER_CRYSTAL COST_PER_PULL ... 
     BASE_PULL_PROB SOFT_PITY_START HARD_PITY_LIMIT SOFT_PITY_INCREMENT ... 
     MAX_PULLS FIFTY_FIFTY_CHANCE;
@@ -23,7 +22,6 @@ HARD_PITY_LIMIT = 90;
 SOFT_PITY_INCREMENT = 0.06;
 
 % Banner Guarantee Mechanics
-GUARANTEED_PULLS = 180;
 MAX_PULLS = 180;
 FIFTY_FIFTY_CHANCE = 0.50;
 
@@ -39,8 +37,10 @@ startingPity = input('Starting Pity: ');
 if isempty(startingPity), startingPity = 0; end
 startingPrimogems = input('Primogems: ');
 if isempty(startingPrimogems), startingPrimogems = 0; end
-startingBudget = input('Budget: ');
-if isempty(startingBudget), startingBudget = 0; end
+startingBudget = input('Budget (enter -1 for unlimited): ');
+if isempty(startingBudget)
+    startingBudget = -1;
+end
 
 freePulls = floor(startingPrimogems / PRIMOGEMS_PER_PULL);
 
@@ -50,33 +50,42 @@ fprintf('                      GOTCHA-PON                   \n');
 fprintf('    A Monte-Carlo Simulation of the Pity System    \n');
 fprintf('                  in Genshin Impact                \n');
 fprintf('===================================================\n');
-fprintf('Number of simulated sessions: %d\n', numSimulations)
+fprintf('Number of simulated sessions: %d\n', numSimulations);
+fprintf('Starting Pity: %d\n', startingPity);
+fprintf('Primogems: %d (=> %d free pulls)\n', startingPrimogems, freePulls);
+if startingBudget < 0
+    startingBudget = Inf;
+    fprintf('Budget: Unlimited\n');
+else
+    fprintf('Budget: %.2f PHP\n', startingBudget);
+end
+
 % Display Banner rules
 fprintf('===================================================\n');
-fprintf('             CHARACTER BANNER RULES (5*)           \n');
+fprintf('          CHARACTER BANNER RULES (5-STAR)          \n');
 fprintf('===================================================\n');
 fprintf('5* Pity System:\n');
-fprintf('If a player does not obtain any 5* character after 89\n');
-fprintf('wishes, the 90th wish is guaranteed to be a 5* character.\n');
-fprintf('   - This counter will reset if the player obtains any 5* character\n\n');
-fprintf('When a player has not obtained any 5* on their 74th wish, a hidden mechanic\n');
-fprintf('called ''Soft Pity'' increases the player''s chances of obtaining a 5* by\n');
-fprintf('6%% for each pull starting from the 75th wish until the player obtains.\n');
-fprintf('a 5* character.\n\n');
-fprintf('Every time a player obtains a 5* character, there is a 50%%\n');
-fprintf('chance it will be the promotional 5* character.\n');
-fprintf('   - If the 5* character obtained is not the promotional character,\n')
-fprintf('       the next 5* character is guaranteed to be the promotional character.\n\n');
-fprintf('Each wish of the same type shares the same pity counters and guarantees,\n');
-fprintf('meaning that the pity counter for the current limited character banner\n');
-fprintf('are carried over to the next limited character banner.\n\n');
-fprintf('1 Wish = 160 Primogems; 10 Wishes = 1600 Primogems\n\n')
-
-% Display player state (starting pity, primogems, and budget)
-fprintf('---------------------------------------------------\n');
-fprintf('Starting Pity: %d\n', startingPity);
-fprintf('Primogems: %d\n', startingPrimogems);
-fprintf('Budget: %d\n', startingBudget);
+fprintf('   If a player does not obtain any 5* character after\n');
+fprintf('   89 wishes, the 90th wish is guaranteed to be a 5*\n');
+fprintf('   character.\n');
+fprintf('   - This counter will reset if the player obtains\n');
+fprintf('     any 5* character\n\n');
+fprintf('   When a player has not obtained any 5* on their 74th\n');
+fprintf('   wish, a hidden mechanic called ''Soft Pity''\n');
+fprintf('   increases the player''s chances of obtaining a 5* by\n');
+fprintf('   6%% for each pull starting from the 74th wish until\n');
+fprintf('   the player obtains a 5* character\n\n');
+fprintf('   Every time a player obtains a 5* character, there is\n');
+fprintf('   a 50%% chance it will be the promotional 5* character.\n');
+fprintf('   - If the 5* character obtained is not the \n');
+fprintf('     promotional character, the next 5* character is\n');
+fprintf('     guaranteed to be the promotional character.\n\n');
+fprintf('   Each wish of the same type shares the same pity\n');
+fprintf('   counters and guarantees, meaning the pity counter\n');
+fprintf('   and guarantee for the current limited character\n');
+fprintf('   banner carry over to the next limited character\n');
+fprintf('   banner\n');
+fprintf('   1 Wish = 160 Primogems; 10 Wishes = 1600 Primogems\n\n');
 
 % ------------------ 2: MONTE CARLO LOOP -----------------
 
@@ -86,25 +95,19 @@ successResults = false(1, numSimulations);
 
 for indexSim = 1:numSimulations 
     [pullsResults(indexSim), spentResults(indexSim), successResults(indexSim)] = ...
-        simulatePlayerPullSession(startingPity, startingBudget, ...
-        freePulls);
+        simulatePlayerPullSession(startingPity, startingBudget, freePulls);
 end
 
 % ------------------ 3: STATISTICAL METRICS  -----------------
 % Compute Statistical Metrics
-% variables: averagePulls, averageSpent
-
-% Target Cumulative Percentiles (probability thresholds)
-% 50%, 80%, 90%, 99% success threshold
-
 averagePulls = mean(pullsResults);
 averageSpent = mean(spentResults);
 successRate = mean(successResults);
 
 % Target Cumulative Percentiles (probability thresholds)
 percentiles = [50, 80, 90, 99];
-pullThresholds = prctile(pullsResults, percentiles);
-spentThresholds = prctile(spentResults, percentiles);
+pullThresholds = prctile(pullsResults(successResults), percentiles);
+spentThresholds = prctile(spentResults(successResults), percentiles);
 
 % Display Statistical Results
 fprintf('===================================================\n');
@@ -157,18 +160,21 @@ for p = percentiles
 end
 
 % Mark budget cap if set
-if startingBudget > 0
-    xline(startingBudget, '-.r', sprintf('Budget: %d PHP', startingBudget), ...
+if isfinite(startingBudget)
+    xline(startingBudget, '-.r', sprintf('Budget: %.0f PHP', startingBudget), ...
         'LineWidth', 1.5, 'LabelVerticalAlignment', 'bottom');
+    budgetLabel = sprintf('%.0f PHP', startingBudget);
+else
+    budgetLabel = 'unlimited';
 end
 
 % Labels and limits
 title('Gotcha-Pon: Cumulative Probability of Obtaining Featured 5*', 'Color', 'k');
-subtitle(sprintf('Pity: %d | Primogems: %d | Budget: %d PHP | Overall Success: %.2f%%', ...
-    startingPity, startingPrimogems, startingBudget, cdfProb(end)), 'Color', [0.2 0.2 0.2]);
-xlabel('Total Budget (PHP)', 'Color', 'k');
+subtitle(sprintf('Pity: %d | Primogems: %d | Budget: %s | Overall Success: %.2f%%', ...
+    startingPity, startingPrimogems, budgetLabel, cdfProb(end)), 'Color', [0.2 0.2 0.2]);
+xlabel('Money Spent (PHP)', 'Color', 'k');
 ylabel('Cumulative Probability (%)', 'Color', 'k');
-xlim([0, xMax * 1.35]);
+xlim([0, max(xMax * 1.35, 1)]);
 ylim([0, 100]);
 yticks(0:10:100);
 ax = gca;
@@ -181,8 +187,7 @@ hold off;
 function [totalPulls, totalSpent, charAcquired] = ...
     simulatePlayerPullSession(startingPity, startingBudget, freePulls)
 
-    global PRIMOGEMS_PER_PULL PHP_PER_CRYSTAL COST_PER_PULL ... 
-        BASE_PULL_PROB SOFT_PITY_START HARD_PITY_LIMIT SOFT_PITY_INCREMENT ... 
+    global COST_PER_PULL BASE_PULL_PROB SOFT_PITY_START HARD_PITY_LIMIT SOFT_PITY_INCREMENT ... 
         MAX_PULLS FIFTY_FIFTY_CHANCE;
 
     pullsCount = 0;             % pulls done in this session
@@ -199,7 +204,7 @@ function [totalPulls, totalSpent, charAcquired] = ...
             pullCost = 0;
         else
             pullCost = COST_PER_PULL;
-            if startingBudget > 0 && (moneySpent + pullCost) > startingBudget
+            if isfinite(startingBudget) && (moneySpent + pullCost) > startingBudget
                 break;
             end
         end
@@ -211,8 +216,9 @@ function [totalPulls, totalSpent, charAcquired] = ...
         % calculate 5 star probability for one pull
         if pity < SOFT_PITY_START
             currentProbability = BASE_PULL_PROB;
-        elseif pity >= SOFT_PITY_START && pity < HARD_PITY_LIMIT
-            currentProbability = min(1.0, BASE_PULL_PROB + SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START));
+        elseif pity < HARD_PITY_LIMIT
+            currentProbability = min(1.0, BASE_PULL_PROB + ...
+                SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START + 1));
         else
             currentProbability = 1.0;       % hard pity guarantee
         end
