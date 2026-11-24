@@ -124,7 +124,57 @@ end
 % ------------------ 4: VISUALIZATION & CDF PLOT -----------------
 
 % Cumulative Distribution Function (CDF) Plot w/ annotation
+successCosts = spentResults(successResults);
+successPulls = pullsResults(successResults);
 
+if isempty(successCosts)
+    fprintf('\nNo successful sessions - CDF cannot be plotted.\n');
+    return;
+end
+
+% Sort ascending and compute empirical CDF (capped at overall success rate)
+[successCosts, order] = sort(successCosts);
+successPulls = successPulls(order);
+cdfProb = (1:numel(successCosts)) / numSimulations * 100;
+
+figure('Name', 'Gotcha-Pon CDF', 'Color', 'w');
+stairs([0, successCosts], [0, cdfProb], 'LineWidth', 2, 'Color', [0 0.45 0.74]);
+hold on; grid on;
+set(gca, 'Color', 'w', 'XColor', 'k', 'YColor', 'k', 'GridColor', [0.8 0.8 0.8]);
+
+% Mark confidence thresholds 
+xMax = max(successCosts);
+for p = percentiles
+    idx = find(cdfProb >= p, 1, 'first');
+    if isempty(idx), continue; end
+
+    x = successCosts(idx);
+    plot([0 x x], [p p 0], '--', 'Color', [0.5 0.5 0.5]);
+    plot(x, p, 'o', 'MarkerSize', 7, 'MarkerFaceColor', [0 0.45 0.74], 'MarkerEdgeColor', 'k');
+    text(x + 0.015 * xMax, p - 2.5, ...
+        sprintf('%d%%: %d PHP (%d pulls)', p, round(x), successPulls(idx)), ...
+        'FontSize', 9, 'Color', 'k', 'BackgroundColor', 'w', 'EdgeColor', [0.7 0.7 0.7]);
+end
+
+% Mark budget cap if set
+if startingBudget > 0
+    xline(startingBudget, '-.r', sprintf('Budget: %d PHP', startingBudget), ...
+        'LineWidth', 1.5, 'LabelVerticalAlignment', 'bottom');
+end
+
+% Labels and limits
+title('Gotcha-Pon: Cumulative Probability of Obtaining Featured 5*', 'Color', 'k');
+subtitle(sprintf('Pity: %d | Primogems: %d | Budget: %d PHP | Overall Success: %.2f%%', ...
+    startingPity, startingPrimogems, startingBudget, cdfProb(end)), 'Color', [0.2 0.2 0.2]);
+xlabel('Total Budget (PHP)', 'Color', 'k');
+ylabel('Cumulative Probability (%)', 'Color', 'k');
+xlim([0, xMax * 1.35]);
+ylim([0, 100]);
+yticks(0:10:100);
+ax = gca;
+ax.XAxis.Exponent = 0;
+xtickformat('%,.0f');
+hold off;
 
 % ------------------ 5: PULL SESSION FUNCTION -----------------
 
