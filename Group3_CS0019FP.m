@@ -90,9 +90,9 @@ function [totalPulls, totalSpent] = simulatePlayerPullSession(startingPity, star
         moneySpent = moneySpent + COST_PER_PULL;
         
         % calculate 5 star probability for one pull
-        if pity <= SOFT_PITY_START
+        if pity < SOFT_PITY_START
             currentProbability = BASE_PULL_PROB;
-        elseif pity > SOFT_PITY_START && pity < HARD_PITY_LIMIT
+        elseif pity >= SOFT_PITY_START && pity < HARD_PITY_LIMIT
             currentProbability = BASE_PULL_PROB + SOFT_PITY_INCREMENT * (pity - SOFT_PITY_START);
         else
             currentProbability = 1.0;       % hard pity guarantee
