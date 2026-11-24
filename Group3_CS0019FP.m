@@ -42,7 +42,7 @@ if isempty(startingPrimogems), startingPrimogems = 0; end
 startingBudget = input('Budget: ');
 if isempty(startingBudget), startingBudget = 0; end
 
-freePulls = floor(startingPrimogems / PRIMOGEMS_PER_PULL)
+freePulls = floor(startingPrimogems / PRIMOGEMS_PER_PULL);
 
 % Simulation results / SCENARIO 
 fprintf('===================================================\n');
